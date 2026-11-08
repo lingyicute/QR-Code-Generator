@@ -563,8 +563,10 @@ const QR = (() => {
  *  SVG renderer
  * ===================================================================== */
 function rr(x,y,w,h,r){
-  return `M${x+r} ${y}H${x+w-r}A${r} ${r} 0 0 1 ${x+w} ${y+r}V${y+h-r}A${r} ${r} 0 0 1 ${x+w-r} ${y+h}H${x+r}A${r} ${r} 0 0 1 ${x} ${y+h-r}V${y+r}A${r} ${r} 0 0 1 ${x+r} ${y}Z`;
+  const f = fmt;
+  return `M${f(x+r)} ${f(y)}H${f(x+w-r)}A${r} ${r} 0 0 1 ${f(x+w)} ${f(y+r)}V${f(y+h-r)}A${r} ${r} 0 0 1 ${f(x+w-r)} ${f(y+h)}H${f(x+r)}A${r} ${r} 0 0 1 ${f(x)} ${f(y+h-r)}V${f(y+r)}A${r} ${r} 0 0 1 ${f(x+r)} ${f(y)}Z`;
 }
+const fmt = v => +v.toFixed(3);
 function toSVG(qr, o){
   const n = qr.size, dim = n + o.margin*2;
   const px = o.px;
@@ -579,7 +581,7 @@ function toSVG(qr, o){
     const X = x + o.margin, Y = y + o.margin;
     if (o.style === 'square') d += `M${X} ${Y}h1v1h-1z`;
     else if (o.style === 'rounded') d += rr(X+0.02,Y+0.02,0.96,0.96,R);
-    else d += `M${X+0.5-C} ${Y+0.5}a${C} ${C} 0 1 0 ${2*C} 0a${C} ${C} 0 1 0 ${-2*C} 0z`;
+    else d += `M${fmt(X+0.5-C)} ${Y+0.5}a${C} ${C} 0 1 0 ${2*C} 0a${C} ${C} 0 1 0 ${-2*C} 0z`;
   }
   s += `<path fill="${o.fg}" d="${d}"/>`;
   if (o.style !== 'square'){
