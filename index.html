@@ -603,7 +603,7 @@ const escWifi = s => s.replace(/([\\;,:"])/g, '\\$1');
 const TYPES = {
   text: { name:'文本 / 网址', fields:[
     {id:'text', label:'文本或网址', kind:'textarea'}
-  ], build:v => v.text || '' },
+  ], build:v => (v.text && v.text.trim()) ? v.text : '' },
   wifi: { name:'Wi-Fi', fields:[
     {id:'ssid', label:'网络名称 (SSID)', kind:'text'},
     {id:'pass', label:'密码', kind:'password'},
@@ -619,19 +619,20 @@ const TYPES = {
     {id:'subject', label:'主题', kind:'text'},
     {id:'body', label:'正文', kind:'textarea', rows:3}
   ], build:v => {
-      if (!v.to) return '';
+      const to = (v.to || '').trim();
+      if (!to) return '';
       const q = [];
       if (v.subject) q.push('subject=' + encodeURIComponent(v.subject));
       if (v.body) q.push('body=' + encodeURIComponent(v.body));
-      return 'mailto:' + v.to + (q.length ? '?' + q.join('&') : '');
+      return 'mailto:' + to + (q.length ? '?' + q.join('&') : '');
   }},
   tel: { name:'电话', fields:[
     {id:'tel', label:'电话号码', kind:'tel'}
-  ], build:v => v.tel ? 'tel:' + v.tel.replace(/\s+/g,'') : '' },
+  ], build:v => { const n = (v.tel||'').replace(/\s+/g,''); return n ? 'tel:' + n : ''; } },
   sms: { name:'短信', fields:[
     {id:'tel', label:'手机号码', kind:'tel'},
     {id:'msg', label:'短信内容', kind:'textarea', rows:3}
-  ], build:v => v.tel ? `SMSTO:${v.tel.replace(/\s+/g,'')}:${v.msg||''}` : '' },
+  ], build:v => { const n = (v.tel||'').replace(/\s+/g,''); return n ? `SMSTO:${n}:${v.msg||''}` : ''; } },
   vcard: { name:'名片', fields:[
     {id:'name', label:'姓名', kind:'text'},
     {id:'org', label:'公司 / 组织', kind:'text'},
@@ -639,13 +640,16 @@ const TYPES = {
     {id:'email', label:'邮箱', kind:'email'},
     {id:'url', label:'网站', kind:'url'}
   ], build:v => {
-      if (!v.name && !v.tel && !v.email) return '';
-      const e = s => (s||'').replace(/([\\;,])/g,'\\$1').replace(/\n/g,'\\n');
-      const L = ['BEGIN:VCARD','VERSION:3.0',`N:${e(v.name)};;;;`,`FN:${e(v.name)}`];
-      if (v.org) L.push('ORG:' + e(v.org));
-      if (v.tel) L.push('TEL:' + v.tel);
-      if (v.email) L.push('EMAIL:' + v.email);
-      if (v.url) L.push('URL:' + v.url);
+      const name = (v.name||'').trim(), org = (v.org||'').trim(), tel = (v.tel||'').trim(),
+            email = (v.email||'').trim(), url = (v.url||'').trim();
+      if (!name && !tel && !email) return '';
+      const e = s => s.replace(/([\\;,])/g,'\\$1').replace(/\r?\n/g,'\\n');
+      // FN is mandatory in vCard 3.0, so fall back to other fields when no name is given
+      const L = ['BEGIN:VCARD','VERSION:3.0',`N:${e(name)};;;;`,`FN:${e(name || org || tel || email)}`];
+      if (org) L.push('ORG:' + e(org));
+      if (tel) L.push('TEL:' + e(tel));
+      if (email) L.push('EMAIL:' + e(email));
+      if (url) L.push('URL:' + url);
       L.push('END:VCARD');
       return L.join('\n');
   }}
@@ -668,7 +672,7 @@ function renderFields(){
     const id = 'f_' + f.id, val = vals[f.id] ?? f.def ?? '';
     const esc = String(val).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     if (f.kind === 'textarea')
-      return `<div class="field"><textarea id="${id}" data-k="${f.id}" rows="${f.rows||4}" placeholder=" ">${esc}</textarea><label for="${id}">${f.label}</label></div>`;
+      return `<div class="field"><textarea id="${id}" data-k="${f.id}" rows="${f.rows||4}" placeholder=" ">\n${esc}</textarea><label for="${id}">${f.label}</label></div>`;
     if (f.kind === 'select')
       return `<div class="field"><select id="${id}" data-k="${f.id}">${f.options.map(o=>`<option value="${o[0]}" ${o[0]===val?'selected':''}>${o[1]}</option>`).join('')}</select><label for="${id}">${f.label}</label></div>`;
     if (f.kind === 'switch')
