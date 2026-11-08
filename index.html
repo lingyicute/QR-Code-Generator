@@ -403,20 +403,52 @@ const QR = (() => {
     return r;
   }
 
+  // Segment modes: numeric (0x1), alphanumeric (0x2), byte (0x4)
+  const ALNUM = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+  const MODES = {
+    num:   { id:0x1, cc:[10,12,14], bits:n => 10*Math.floor(n/3) + [0,4,7][n%3] },
+    alnum: { id:0x2, cc:[9,11,13],  bits:n => 11*Math.floor(n/2) + 6*(n%2) },
+    byte:  { id:0x4, cc:[8,16,16],  bits:n => 8*n }
+  };
+  function pickMode(bytes){
+    if (!bytes.length) return 'byte';
+    let num = true, aln = true;
+    for (const b of bytes){
+      if (b < 48 || b > 57) num = false;
+      if (b > 127 || ALNUM.indexOf(String.fromCharCode(b)) < 0) aln = false;
+      if (!num && !aln) break;
+    }
+    return num ? 'num' : aln ? 'alnum' : 'byte';
+  }
+
   function encode(bytes, ecc){
-    // choose smallest version
+    // choose the most compact mode, then the smallest version
+    const modeName = pickMode(bytes), mode = MODES[modeName];
     let ver, usedBits;
     for (ver = 1; ; ver++){
-      usedBits = 4 + (ver <= 9 ? 8 : 16) + bytes.length*8;
+      usedBits = 4 + mode.cc[ver <= 9 ? 0 : ver <= 26 ? 1 : 2] + mode.bits(bytes.length);
       if (usedBits <= dataCodewords(ver,ecc)*8) break;
       if (ver === 40) throw new Error('TOO_LONG');
     }
     const capBits = dataCodewords(ver,ecc)*8;
     const bits = [];
     const push = (v,len) => { for (let i = len-1; i >= 0; i--) bits.push((v >>> i) & 1); };
-    push(0x4,4);
-    push(bytes.length, ver <= 9 ? 8 : 16);
-    for (const b of bytes) push(b,8);
+    push(mode.id,4);
+    push(bytes.length, mode.cc[ver <= 9 ? 0 : ver <= 26 ? 1 : 2]);
+    if (modeName === 'num'){
+      for (let i = 0; i < bytes.length; i += 3){
+        const c = bytes.slice(i, i+3);
+        push(+String.fromCharCode(...c), c.length*3 + 1);
+      }
+    } else if (modeName === 'alnum'){
+      const v = i => ALNUM.indexOf(String.fromCharCode(bytes[i]));
+      for (let i = 0; i < bytes.length; i += 2){
+        if (i + 1 < bytes.length) push(v(i)*45 + v(i+1), 11);
+        else push(v(i), 6);
+      }
+    } else {
+      for (const b of bytes) push(b,8);
+    }
     push(0, Math.min(4, capBits - bits.length));
     push(0, (8 - bits.length % 8) % 8);
     const data = [];
@@ -522,7 +554,7 @@ const QR = (() => {
       applyMask(mk);
     }
     applyMask(best); formatBits(best);
-    return { size, modules: m, version: ver, mask: best, used: Math.ceil(usedBits/8), capacity: capBits/8 };
+    return { size, modules: m, version: ver, mask: best, mode: modeName, used: Math.ceil(usedBits/8), capacity: capBits/8 };
   }
   return { encode };
 })();
