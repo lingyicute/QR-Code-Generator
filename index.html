@@ -831,8 +831,14 @@ $('bg').addEventListener('input', e => { $('bgv').textContent = e.target.value; 
 
 /* ---------- Theme (Material 3 style tonal palette from a hue) ---------- */
 const HUES = [265, 205, 160, 30, 345];
+const MODE_NAMES = { auto:'跟随系统', light:'浅色', dark:'深色' };
 const prefs = { hue: 0, mode: 'auto' };
-try { Object.assign(prefs, JSON.parse(localStorage.getItem('qr-theme') || '{}')); } catch(e){}
+try {
+  // validate stored values so corrupted localStorage can never break theming
+  const saved = JSON.parse(localStorage.getItem('qr-theme') || '{}') || {};
+  if (Number.isInteger(saved.hue) && saved.hue >= 0) prefs.hue = saved.hue % HUES.length;
+  if (Object.prototype.hasOwnProperty.call(MODE_NAMES, saved.mode)) prefs.mode = saved.mode;
+} catch(e){}
 const mq = matchMedia('(prefers-color-scheme: dark)');
 function applyTheme(){
   const h = HUES[prefs.hue % HUES.length];
@@ -857,8 +863,9 @@ function applyTheme(){
   const r = document.documentElement.style;
   for (const k in v) r.setProperty('--' + k, v[k]);
   r.colorScheme = dark ? 'dark' : 'light';
+  const label = '切换明暗模式（当前：' + MODE_NAMES[prefs.mode] + '）';
+  $('btnMode').title = label; $('btnMode').setAttribute('aria-label', label);
 }
-const MODE_NAMES = { auto:'跟随系统', light:'浅色', dark:'深色' };
 $('btnHue').onclick = () => { prefs.hue = (prefs.hue + 1) % HUES.length; save(); applyTheme(); };
 $('btnMode').onclick = () => {
   prefs.mode = { auto:'light', light:'dark', dark:'auto' }[prefs.mode];
