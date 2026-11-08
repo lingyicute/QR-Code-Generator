@@ -698,6 +698,7 @@ function showBanner(msg, warn){
 }
 function setButtons(on){ ['dlPng','dlSvg','copyImg'].forEach(i => $(i).disabled = !on); }
 
+const MODE_LABELS = { num:'数字', alnum:'字母数字', byte:'字节' };
 function update(){
   const t = TYPES[state.type];
   const text = t.build(state.values[state.type]);
@@ -720,11 +721,13 @@ function update(){
   try{
     qr = QR.encode(new TextEncoder().encode(text), ecc);
   }catch(e){
+    const tooLong = e && e.message === 'TOO_LONG';
+    if (!tooLong) console.error(e);
     current = null;
     $('qrBox').classList.add('is-empty');
-    $('emptyTxt').textContent = '内容过长，无法生成';
+    $('emptyTxt').textContent = tooLong ? '内容过长，无法生成' : '生成失败';
     $('stats').innerHTML = ''; $('sizeNote').textContent = '';
-    showBanner('内容超出二维码容量上限。请缩短内容，或降低纠错等级（L 级最多约 2953 字节）。');
+    showBanner(tooLong ? '内容超出二维码容量上限。请缩短内容，或降低纠错等级（L 级最多约 2953 字节）。' : '生成二维码时出错，请刷新页面后重试。');
     setButtons(false);
     return;
   }
@@ -734,11 +737,11 @@ function update(){
   const svg = toSVG(qr, o);
   current = { qr, o, svg };
   $('qrImg').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  $('qrImg').alt = '二维码：' + text.slice(0,60);
+  $('qrImg').alt = '二维码（' + t.name + '）';
   $('qrBox').classList.remove('is-empty');
   $('stats').innerHTML =
     `<span class="stat">版本 ${qr.version}</span><span class="stat">${qr.size} × ${qr.size} 模块</span>` +
-    `<span class="stat">${qr.used} / ${qr.capacity} 字节</span><span class="stat">掩码 ${qr.mask}</span>`;
+    `<span class="stat">${qr.used} / ${qr.capacity} 字节</span><span class="stat">掩码 ${qr.mask}</span><span class="stat">${MODE_LABELS[qr.mode]}模式</span>`;
   $('sizeNote').textContent = `实际输出 ${px} × ${px} px（按整数像素对齐，保证边缘清晰）`;
   setButtons(true);
 
