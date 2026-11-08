@@ -566,9 +566,10 @@ const QR = (() => {
 /* =====================================================================
  *  SVG renderer
  * ===================================================================== */
+// Rounded rectangle as a compact path (absolute move, relative segments)
 function rr(x,y,w,h,r){
-  const f = fmt;
-  return `M${f(x+r)} ${f(y)}H${f(x+w-r)}A${r} ${r} 0 0 1 ${f(x+w)} ${f(y+r)}V${f(y+h-r)}A${r} ${r} 0 0 1 ${f(x+w-r)} ${f(y+h)}H${f(x+r)}A${r} ${r} 0 0 1 ${f(x)} ${f(y+h-r)}V${f(y+r)}A${r} ${r} 0 0 1 ${f(x+r)} ${f(y)}Z`;
+  const f = v => +v.toFixed(3), a = f(w-2*r), b = f(h-2*r);
+  return `M${f(x+r)} ${f(y)}h${a}a${r} ${r} 0 0 1 ${r} ${r}v${b}a${r} ${r} 0 0 1 ${-r} ${r}h${-a}a${r} ${r} 0 0 1 ${-r} ${-r}v${-b}a${r} ${r} 0 0 1 ${r} ${-r}z`;
 }
 const fmt = v => +v.toFixed(3);
 function toSVG(qr, o){
@@ -583,7 +584,13 @@ function toSVG(qr, o){
     if (!qr.modules[y][x]) continue;
     if (o.style !== 'square' && inF(x,y)) continue;
     const X = x + o.margin, Y = y + o.margin;
-    if (o.style === 'square') d += `M${X} ${Y}h1v1h-1z`;
+    if (o.style === 'square'){
+      // merge horizontal runs of dark modules into a single rectangle
+      let len = 1;
+      while (x + len < n && qr.modules[y][x+len]) len++;
+      d += `M${X} ${Y}h${len}v1h-${len}z`;
+      x += len - 1;
+    }
     else if (o.style === 'rounded') d += rr(X+0.02,Y+0.02,0.96,0.96,R);
     else d += `M${fmt(X+0.5-C)} ${Y+0.5}a${C} ${C} 0 1 0 ${2*C} 0a${C} ${C} 0 1 0 ${-2*C} 0z`;
   }
