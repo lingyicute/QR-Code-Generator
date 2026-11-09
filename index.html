@@ -612,7 +612,7 @@ function toSVG(qr, o){
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dim} ${dim}" width="${px}" height="${px}"${o.style==='square'?' shape-rendering="crispEdges"':''}>`;
   if (!o.transparent) s += `<rect width="${dim}" height="${dim}" fill="${o.bg}"/>`;
   let d = '';
-  const R = 0.3, C = 0.46;
+  const R = 0.3, C = 0.5; // dots touch their neighbours: a gap between them breaks up the dark runs scanners rely on
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++){
     if (!qr.modules[y][x]) continue;
     if (o.style !== 'square' && inF(x,y)) continue;
