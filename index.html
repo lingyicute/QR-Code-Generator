@@ -451,7 +451,13 @@ const QR = (() => {
     return segs;
   }
 
+  // Nothing longer than 7089 bytes can fit even in numeric mode at level L, so
+  // oversized input is rejected before any per-byte work (a huge paste would
+  // otherwise allocate a DP table with one entry per byte on every keystroke)
+  const MAX_INPUT = 7089;
+
   function encode(bytes, ecc){
+    if (bytes.length > MAX_INPUT) throw new Error('TOO_LONG');
     // pick the cheapest segmentation, then the smallest version that holds it
     const cache = [];
     let ver, segs, usedBits;

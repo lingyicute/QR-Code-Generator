@@ -242,3 +242,10 @@ test('dots style draws alignment patterns as solid concentric rings', () => {
     assert.equal(dots, expected, `dots for ${cx},${cy}`);
   }
 });
+
+test('oversized input is rejected immediately', () => {
+  const big = new Uint8Array(5 * 1024 * 1024).fill(0x31);
+  const t0 = Date.now();
+  assert.throws(() => QR.encode(big, 0), /TOO_LONG/);
+  assert.ok(Date.now() - t0 < 500, 'must fail fast without segmenting');
+});
