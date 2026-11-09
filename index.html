@@ -666,7 +666,8 @@ const TYPES = {
     {id:'subject', label:'主题', kind:'text'},
     {id:'body', label:'正文', kind:'textarea', rows:3}
   ], build:v => {
-      const to = (v.to || '').trim();
+      // accept several recipients separated by commas, semicolons or whitespace
+      const to = (v.to || '').split(/[\s,;\uff0c\uff1b]+/).filter(Boolean).join(',');
       if (!to) return '';
       const q = [];
       if (v.subject) q.push('subject=' + encodeURIComponent(v.subject));
