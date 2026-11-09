@@ -678,7 +678,8 @@ const TYPES = {
     {id:'body', label:'正文', kind:'textarea', rows:3}
   ], build:v => {
       // accept several recipients separated by commas, semicolons or whitespace
-      const to = (v.to || '').split(/[\s,;\uff0c\uff1b]+/).filter(Boolean).join(',');
+      const to = (v.to || '').split(/[\s,;\uff0c\uff1b]+/).filter(Boolean)
+        .map(a => encodeURIComponent(a).replace(/%40/g, '@')).join(',');
       if (!to) return '';
       const q = [];
       if (v.subject) q.push('subject=' + encodeURIComponent(v.subject));
@@ -699,7 +700,7 @@ const TYPES = {
     {id:'email', label:'邮箱', kind:'email'},
     {id:'url', label:'网站', kind:'url'}
   ], build:v => {
-      const name = (v.name||'').trim(), org = (v.org||'').trim(), tel = (v.tel||'').trim(),
+      const name = (v.name||'').trim(), org = (v.org||'').trim(), tel = cleanPhone(v.tel),
             email = (v.email||'').trim(), url = (v.url||'').trim();
       if (!name && !org && !tel && !email && !url) return '';
       const e = s => s.replace(/([\\;,])/g,'\\$1').replace(/\r?\n/g,'\\n');

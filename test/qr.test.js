@@ -155,6 +155,8 @@ test('content builders', () => {
   assert.equal(b('tel', { tel: '' }), '');
   assert.equal(b('tel', { tel: '+1 555.123.4567' }), 'tel:+15551234567');
   assert.equal(b('sms', { tel: '555 1234', msg: 'a:b' }), 'SMSTO:5551234:a:b');
+  assert.equal(b('email', { to: 'a+b@c.com' }), 'mailto:a%2Bb@c.com');
+  assert.equal(b('vcard', { tel: '+86 138-0013 8000' }), 'BEGIN:VCARD\nVERSION:3.0\nN:;;;;\nFN:+8613800138000\nTEL:+8613800138000\nEND:VCARD');
   assert.equal(b('vcard', {}), '');
   assert.equal(b('vcard', { org: 'ACME, Inc.' }),
     'BEGIN:VCARD\nVERSION:3.0\nN:;;;;\nFN:ACME\\, Inc.\nORG:ACME\\, Inc.\nEND:VCARD');
