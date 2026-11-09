@@ -589,7 +589,7 @@ const QR = (() => {
       applyMask(mk);
     }
     applyMask(best); formatBits(best);
-    return { size, modules: m, version: ver, mask: best, mode: segs.length === 1 ? segs[0].mode : 'mixed', used: Math.ceil(usedBits/8), capacity: capBits/8 };
+    return { size, modules: m, version: ver, mask: best, mode: segs.length === 1 ? segs[0].mode : 'mixed', used: Math.ceil(usedBits/8), capacity: capBits/8, codewords: all };
   }
   return { encode };
 })();

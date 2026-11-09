@@ -189,3 +189,12 @@ test('SVG output', () => {
   for (const m of sq.matchAll(/M\d+ \d+h(\d+)v1h-\d+z/g)) area += +m[1];
   assert.equal(area, dark);
 });
+
+test('codewords match the ISO/IEC 18004 annex example', () => {
+  // "01234567" at level M, version 1: 16 data codewords followed by 10 Reed-Solomon codewords
+  const qr = QR.encode(bytesOf('01234567'), 1);
+  assert.deepEqual(qr.codewords, [
+    16, 32, 12, 86, 97, 128, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17,
+    165, 36, 212, 193, 237, 54, 199, 135, 44, 85
+  ]);
+});
