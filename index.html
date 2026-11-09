@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>二维码生成器 · QR Code Generator</title>
-<meta name="theme-color" content="#6750a4">
+<meta name="theme-color" id="themeColor" content="#6750a4">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23eaddff'/%3E%3Cpath transform='translate(3 3) scale(.75)' fill='%2321005d' d='M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM19 19h2v2h-2zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM15 19h2v2h-2zM17 17h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2z'/%3E%3C/svg%3E">
 <meta name="description" content="纯本地处理的二维码生成器，支持文本、网址、Wi-Fi、邮件、电话、短信、名片，可导出 PNG / SVG。">
 <style>
@@ -909,6 +909,7 @@ function applyTheme(){
   const r = document.documentElement.style;
   for (const k in v) r.setProperty('--' + k, v[k]);
   r.colorScheme = dark ? 'dark' : 'light';
+  $('themeColor').content = v['surface'];
   const label = '切换明暗模式（当前：' + MODE_NAMES[prefs.mode] + '）';
   $('btnMode').title = label; $('btnMode').setAttribute('aria-label', label);
 }
