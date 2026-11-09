@@ -734,6 +734,23 @@ const TYPES = {
   }}
 };
 
+function lum(hex){
+  const c = [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255).map(v => v <= .04045 ? v/12.92 : Math.pow((v+.055)/1.055,2.4));
+  return .2126*c[0] + .7152*c[1] + .0722*c[2];
+}
+// Reasons why the chosen colours / quiet zone may make the code hard to scan (empty list = fine)
+function scanWarnings({ fg, bg, transparent, margin }){
+  const w = [];
+  if (transparent) w.push('已启用透明背景：请确保使用时的底色足够浅，以保证可扫描。');
+  else {
+    const l1 = lum(fg), l2 = lum(bg), ratio = (Math.max(l1,l2)+.05)/(Math.min(l1,l2)+.05);
+    if (l1 > l2) w.push('前景色比背景色更亮（反色），部分扫码器可能无法识别。');
+    else if (ratio < 3) w.push('前景与背景对比度较低（' + ratio.toFixed(1) + ':1），建议加深前景色。');
+  }
+  if (margin < 2) w.push('留白仅 ' + margin + ' 格，标准建议至少 4 格，部分扫码器可能无法识别。');
+  return w;
+}
+
 /* =====================================================================
  *  App
  * ===================================================================== */
@@ -776,11 +793,12 @@ let current = null;   // { qr, svgOpts, svg }
 let raf = 0;
 function schedule(){ cancelAnimationFrame(raf); raf = requestAnimationFrame(update); }
 
-function lum(hex){
-  const c = [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255).map(v => v <= .04045 ? v/12.92 : Math.pow((v+.055)/1.055,2.4));
-  return .2126*c[0] + .7152*c[1] + .0722*c[2];
-}
+let bannerKey = '';
 function showBanner(msg, warn){
+  // skip identical updates: rewriting the text of a role="alert" region on every keystroke makes screen readers repeat it
+  const key = msg ? (warn ? 'w:' : 'e:') + msg : '';
+  if (key === bannerKey) return;
+  bannerKey = key;
   const b = $('banner');
   b.classList.toggle('show', !!msg);
   b.classList.toggle('warn', !!warn);
@@ -850,12 +868,8 @@ function update(){
   $('sizeNote').textContent = `实际输出 ${px} × ${px} px（按整数像素对齐，保证边缘清晰）`;
   setButtons(true);
 
-  // contrast checks
-  const l1 = lum(fg), l2 = lum(bg), ratio = (Math.max(l1,l2)+.05)/(Math.min(l1,l2)+.05);
-  if (!transparent && l1 > l2) showBanner('前景色比背景色更亮（反色），部分扫码器可能无法识别。', true);
-  else if (!transparent && ratio < 3) showBanner('前景与背景对比度较低（' + ratio.toFixed(1) + ':1），建议加深前景色。', true);
-  else if (transparent) showBanner('已启用透明背景：请确保使用时的底色足够浅，以保证可扫描。', true);
-  else showBanner('');
+  // contrast and quiet-zone checks
+  showBanner(scanWarnings({ fg, bg, transparent, margin }).join(' '), true);
 }
 
 /* ---------- Export ---------- */

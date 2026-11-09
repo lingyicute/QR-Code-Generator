@@ -11,8 +11,8 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const js = html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
 const cut = js.indexOf('/* =====================================================================\n *  App');
 assert.ok(cut > 0, 'App section marker not found');
-const { QR, toSVG, TYPES, cleanPhone } =
-  new Function(js.slice(0, cut) + '\nreturn { QR, toSVG, TYPES, cleanPhone };')();
+const { QR, toSVG, TYPES, cleanPhone, scanWarnings } =
+  new Function(js.slice(0, cut) + '\nreturn { QR, toSVG, TYPES, cleanPhone, scanWarnings };')();
 
 const bytesOf = s => Array.from(new TextEncoder().encode(s));
 const rep = (ch, n) => Array.from({ length: n }, () => ch.charCodeAt(0));
@@ -256,4 +256,15 @@ test('case-sensitive fields opt out of mobile keyboard auto-correction', () => {
   assert.equal(raw('wifi', 'ssid'), true);
   assert.equal(raw('wifi', 'pass'), true);
   assert.ok(!raw('vcard', 'name'), 'names keep the keyboard default so they get capitalised');
+});
+
+test('scan warnings cover contrast, inverted colours, transparency and quiet zone', () => {
+  const ok = { fg: '#000000', bg: '#ffffff', transparent: false, margin: 4 };
+  assert.deepEqual(scanWarnings(ok), []);
+  assert.equal(scanWarnings({ ...ok, fg: '#ffffff', bg: '#000000' }).length, 1, 'inverted');
+  assert.match(scanWarnings({ ...ok, fg: '#bbbbbb' })[0], /对比度较低/);
+  assert.equal(scanWarnings({ ...ok, fg: '#ffffff', bg: '#000000', transparent: true }).length, 1, 'transparent replaces colour checks');
+  assert.match(scanWarnings({ ...ok, margin: 1 })[0], /留白仅 1 格/);
+  assert.equal(scanWarnings({ ...ok, margin: 2 }).length, 0);
+  assert.equal(scanWarnings({ ...ok, fg: '#cccccc', margin: 0 }).length, 2, 'warnings accumulate');
 });
