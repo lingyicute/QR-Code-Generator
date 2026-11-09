@@ -268,3 +268,14 @@ test('scan warnings cover contrast, inverted colours, transparency and quiet zon
   assert.equal(scanWarnings({ ...ok, margin: 2 }).length, 0);
   assert.equal(scanWarnings({ ...ok, fg: '#cccccc', margin: 0 }).length, 2, 'warnings accumulate');
 });
+
+test('the page cannot talk to the network', () => {
+  const csp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/);
+  assert.ok(csp, 'CSP meta tag is present');
+  assert.match(csp[1], /default-src 'none'/);
+  assert.ok(!/connect-src|https?:\/\//.test(csp[1]), 'no network origins are allowed');
+  // no external resources are referenced (the SVG namespace is an identifier, not a request)
+  const refs = html.replace(/xmlns='http:\/\/www\.w3\.org\/2000\/svg'|xmlns="http:\/\/www\.w3\.org\/2000\/svg"/g, '')
+    .match(/(?:src|href)\s*=\s*["']?https?:\/\//g);
+  assert.equal(refs, null);
+});
