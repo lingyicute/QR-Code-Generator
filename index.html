@@ -66,7 +66,7 @@ main{max-width:1100px;margin:0 auto;padding:8px 16px 40px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .chip{position:relative;overflow:hidden;display:inline-flex;border-radius:8px;cursor:pointer;user-select:none}
 .chip input{position:absolute;opacity:0;pointer-events:none}
-.chip span{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:1px solid var(--outline);border-radius:8px;font-size:14px;font-weight:500;color:var(--on-surface-variant);transition:background .2s,color .2s,border-color .2s}
+.chip input + span{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:1px solid var(--outline);border-radius:8px;font-size:14px;font-weight:500;color:var(--on-surface-variant);transition:background .2s,color .2s,border-color .2s}
 .chip:hover::before{opacity:.08}
 .chip input:checked + span{background:var(--secondary-container);color:var(--on-secondary-container);border-color:transparent}
 .chip input:checked + span::before{content:"";width:18px;height:18px;background:currentColor;margin-left:-4px;
@@ -895,6 +895,7 @@ document.addEventListener('pointerdown', e => {
   w.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d/2}px;top:${e.clientY - r.top - d/2}px`;
   t.appendChild(w);
   w.addEventListener('animationend', () => w.remove());
+  setTimeout(() => w.remove(), 700); // animations may be disabled (reduced motion)
 });
 
 /* ---------- Init ---------- */
