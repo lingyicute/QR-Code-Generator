@@ -149,7 +149,7 @@ test('content builders', () => {
   assert.equal(b('wifi', { ssid: 'Open', pass: 'ignored', enc: 'nopass' }), 'WIFI:T:nopass;S:Open;;');
   assert.equal(b('email', { to: '' }), '');
   assert.equal(b('email', { to: ' a@b.com ; c@d.com, e@f.com', subject: 'Hi there', body: 'a&b\nc' }),
-    'mailto:a@b.com,c@d.com,e@f.com?subject=Hi%20there&body=a%26b%0Ac');
+    'mailto:a@b.com,c@d.com,e@f.com?subject=Hi%20there&body=a%26b%0D%0Ac');
   assert.equal(cleanPhone(' +86 (010) 1234-5678 '), '+8601012345678');
   assert.equal(cleanPhone('（010）８８８８－9999'), '01088889999');
   assert.equal(b('tel', { tel: '' }), '');

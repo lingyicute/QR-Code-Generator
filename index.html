@@ -683,7 +683,8 @@ const TYPES = {
       if (!to) return '';
       const q = [];
       if (v.subject) q.push('subject=' + encodeURIComponent(v.subject));
-      if (v.body) q.push('body=' + encodeURIComponent(v.body));
+      // RFC 6068: line breaks in a mailto body are encoded as CRLF
+      if (v.body) q.push('body=' + encodeURIComponent(v.body.replace(/\r?\n/g, '\r\n')));
       return 'mailto:' + to + (q.length ? '?' + q.join('&') : '');
   }},
   tel: { name:'电话', fields:[
