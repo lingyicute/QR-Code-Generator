@@ -13,6 +13,7 @@ A single-file, fully offline QR code generator. Open `index.html` in a browser â
 - Export as PNG or SVG, or copy the image to the clipboard
 - Material 3 inspired UI with light / dark / system appearance and selectable accent colors
 - Contrast warnings for low-contrast or inverted colors
+- Oversized input is rejected immediately, and the matrix is only re-encoded when the payload or error correction level changes
 - Case-sensitive inputs (text / URL, Wi-Fi name and password) turn off mobile auto-capitalisation and autocorrect, so a URL or password is never altered by the keyboard
 
 ## Usage

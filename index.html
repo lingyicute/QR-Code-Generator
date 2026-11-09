@@ -797,6 +797,7 @@ function setPreview(svg){
   $('qrImg').src = previewUrl || BLANK_IMG;
   if (old) URL.revokeObjectURL(old);
 }
+let encoded = { key: null, qr: null }; // last successful encode, see update()
 const MODE_LABELS = { num:'数字', alnum:'字母数字', byte:'字节', mixed:'混合' };
 function update(){
   const t = TYPES[state.type];
@@ -818,8 +819,12 @@ function update(){
   }
   let qr;
   try{
-    qr = QR.encode(new TextEncoder().encode(text), ecc);
+    // size, colour and style changes do not alter the matrix, so only re-encode when the payload changes
+    const key = ecc + ':' + text;
+    if (encoded.key !== key) encoded = { key, qr: QR.encode(new TextEncoder().encode(text), ecc) };
+    qr = encoded.qr;
   }catch(e){
+    encoded = { key: null, qr: null };
     const tooLong = e && e.message === 'TOO_LONG';
     if (!tooLong) console.error(e);
     current = null; setPreview('');
