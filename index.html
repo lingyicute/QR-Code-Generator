@@ -653,10 +653,10 @@ const TYPES = {
   ], build:v => {
       const name = (v.name||'').trim(), org = (v.org||'').trim(), tel = (v.tel||'').trim(),
             email = (v.email||'').trim(), url = (v.url||'').trim();
-      if (!name && !tel && !email) return '';
+      if (!name && !org && !tel && !email && !url) return '';
       const e = s => s.replace(/([\\;,])/g,'\\$1').replace(/\r?\n/g,'\\n');
       // FN is mandatory in vCard 3.0, so fall back to other fields when no name is given
-      const L = ['BEGIN:VCARD','VERSION:3.0',`N:${e(name)};;;;`,`FN:${e(name || org || tel || email)}`];
+      const L = ['BEGIN:VCARD','VERSION:3.0',`N:${e(name)};;;;`,`FN:${e(name || org || tel || email || url)}`];
       if (org) L.push('ORG:' + e(org));
       if (tel) L.push('TEL:' + e(tel));
       if (email) L.push('EMAIL:' + e(email));
