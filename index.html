@@ -262,7 +262,7 @@ footer{max-width:1100px;margin:0 auto;padding:8px 24px 40px;color:var(--on-surfa
         <div class="opt">
           <label class="switch-row">
             <span><span class="t">透明背景</span><br><span class="d">导出的 PNG / SVG 不含背景色</span></span>
-            <input type="checkbox" class="switch" id="transparent">
+            <input type="checkbox" class="switch" id="transparent" role="switch">
           </label>
         </div>
       </section>
@@ -738,7 +738,7 @@ function renderFields(){
     if (f.kind === 'select')
       return `<div class="field"><select id="${id}" data-k="${f.id}">${f.options.map(o=>`<option value="${o[0]}" ${o[0]===val?'selected':''}>${o[1]}</option>`).join('')}</select><label for="${id}">${f.label}</label></div>`;
     if (f.kind === 'switch')
-      return `<label class="switch-row"><span><span class="t">${f.label}</span><br><span class="d">${f.desc||''}</span></span><input type="checkbox" class="switch" id="${id}" data-k="${f.id}" ${val?'checked':''}></label>`;
+      return `<label class="switch-row"><span><span class="t">${f.label}</span><br><span class="d">${f.desc||''}</span></span><input type="checkbox" class="switch" role="switch" id="${id}" data-k="${f.id}" ${val?'checked':''}></label>`;
     return `<div class="field"><input type="${f.kind==='password' && vals.showpass ? 'text' : f.kind}" id="${id}" data-k="${f.id}" value="${esc}" placeholder=" " autocomplete="${f.kind==='password'?'new-password':'off'}" spellcheck="false"><label for="${id}">${f.label}</label></div>`;
   }).join('');
   // Wi-Fi: hide password field when no encryption
