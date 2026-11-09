@@ -655,7 +655,7 @@ function toSVG(qr, o){
  * ===================================================================== */
 // drop visual separators so scanners get a dialable number
 // NFKC folds full-width digits, brackets, plus and hyphen into their ASCII forms first
-const cleanPhone = s => (s || '').normalize('NFKC').replace(/[\s().\-\u2013\u2014\u00b7]/g, '');
+const cleanPhone = s => (s || '').normalize('NFKC').replace(/[\s().\-\/\[\]\u2010-\u2015\u2212\u00b7\u30fb]/g, '');
 const escWifi = s => s.replace(/([\\;,:"])/g, '\\$1');
 const TYPES = {
   text: { name:'文本 / 网址', fields:[

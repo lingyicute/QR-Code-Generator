@@ -152,6 +152,7 @@ test('content builders', () => {
     'mailto:a@b.com,c@d.com,e@f.com?subject=Hi%20there&body=a%26b%0D%0Ac');
   assert.equal(cleanPhone(' +86 (010) 1234-5678 '), '+8601012345678');
   assert.equal(cleanPhone('（010）８８８８－9999'), '01088889999');
+  assert.equal(cleanPhone('+1\u2212555\u2013123/[4567]\u30fb'), '+15551234567');
   assert.equal(b('tel', { tel: '' }), '');
   assert.equal(b('tel', { tel: '+1 555.123.4567' }), 'tel:+15551234567');
   assert.equal(b('sms', { tel: '555 1234', msg: 'a:b' }), 'SMSTO:5551234:a:b');
