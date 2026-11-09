@@ -81,8 +81,13 @@ test('finder, timing and alignment patterns are in place', () => {
   // alignment pattern centres for a few well-known versions (grow the payload until the version is hit)
   const centres = { 2: [6, 18], 7: [6, 22, 38], 14: [6, 26, 46, 66], 32: [6, 34, 60, 86, 112, 138], 40: [6, 30, 58, 86, 114, 142, 170] };
   for (const [ver, cs] of Object.entries(centres)) {
-    let len = 1, qr = QR.encode(rep('a', len), 0);
-    while (qr.version < +ver) qr = QR.encode(rep('a', ++len), 0);
+    // smallest payload that needs this version (binary search; the version is monotonic in the length)
+    let lo = 1, hi = 2953;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (QR.encode(rep('a', mid), 0).version >= +ver) hi = mid; else lo = mid + 1;
+    }
+    const qr = QR.encode(rep('a', lo), 0);
     assert.equal(qr.version, +ver);
     const last = cs[cs.length - 1];
     for (const cy of cs) for (const cx of cs) {
