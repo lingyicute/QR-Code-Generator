@@ -823,7 +823,8 @@ function update(){
     return;
   }
   const dim = qr.size + margin*2;
-  const px = Math.max(1, Math.floor(reqPx/dim)) * dim;
+  // rounded / dot modules need a few device pixels each to stay scannable; square ones can be 1 px
+  const px = Math.max(style === 'square' ? 1 : 3, Math.floor(reqPx/dim)) * dim;
   const o = { px, margin, fg, bg, style, transparent };
   const svg = toSVG(qr, o);
   current = { qr, o, svg };
