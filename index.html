@@ -118,7 +118,7 @@ main{max-width:1100px;margin:0 auto;padding:8px 16px 40px}
 .seg label:first-child{border-left:0}
 .seg label:hover::before{opacity:.08}
 .seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label:has(input:checked){background:var(--secondary-container);color:var(--on-secondary-container)}
+.seg label.on,.seg label:has(input:checked){background:var(--secondary-container);color:var(--on-secondary-container)}
 .seg label:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:-3px}
 .hint{margin:8px 4px 0;font-size:12px;color:var(--on-surface-variant)}
 
@@ -909,7 +909,9 @@ function onField(e){
   if (k === 'showpass'){ const p = $('f_pass'); if (p) p.type = e.target.checked ? 'text' : 'password'; }
   syncWifi(); schedule();
 }
-document.querySelectorAll('input[name=ecc],input[name=style],#transparent').forEach(el => el.addEventListener('change', schedule));
+// browsers without :has() rely on this class to highlight the selected segment
+function syncSeg(){ document.querySelectorAll('.seg input').forEach(i => i.parentNode.classList.toggle('on', i.checked)); }
+document.querySelectorAll('input[name=ecc],input[name=style],#transparent').forEach(el => el.addEventListener('change', () => { syncSeg(); schedule(); }));
 function paintRange(el){ el.style.setProperty('--p', ((el.value - el.min)/(el.max - el.min)*100) + '%'); }
 $('size').addEventListener('input', e => { $('outSize').textContent = e.target.value + ' px'; paintRange(e.target); schedule(); });
 $('margin').addEventListener('input', e => { $('outMargin').textContent = e.target.value + ' 格'; paintRange(e.target); schedule(); });
@@ -988,12 +990,14 @@ applyTheme();
 renderTypes();
 renderFields();
 syncLabels();
+syncSeg();
 document.querySelectorAll('input[type=range]').forEach(paintRange);
 update();
 // form controls may be restored after the first run (bfcache, Firefox form restore)
 window.addEventListener('pageshow', e => {
   if (!e.persisted) return;
   syncLabels();
+  syncSeg();
   document.querySelectorAll('input[type=range]').forEach(paintRange);
   schedule();
 });
