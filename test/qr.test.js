@@ -198,3 +198,47 @@ test('codewords match the ISO/IEC 18004 annex example', () => {
     165, 36, 212, 193, 237, 54, 199, 135, 44, 85
   ]);
 });
+
+test('alignment pattern centres are exposed and match the specification', () => {
+  const need = (ver, ecc = 0) => {
+    let lo = 1, hi = 2953;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (QR.encode(rep('a', mid), ecc).version >= ver) hi = mid; else lo = mid + 1;
+    }
+    return QR.encode(rep('a', lo), ecc);
+  };
+  assert.deepEqual(QR.encode(bytesOf('a'), 1).align, []);
+  assert.deepEqual(need(2).align, [6, 18]);
+  assert.deepEqual(need(23).align, [6, 30, 54, 78, 102]);
+  assert.deepEqual(need(36).align, [6, 24, 50, 76, 102, 128, 154]);
+});
+
+test('dots style draws alignment patterns as solid concentric rings', () => {
+  const base = { px: 600, margin: 4, fg: '#000000', bg: '#ffffff', transparent: false };
+  for (const len of [30, 150]) {
+    const qr = QR.encode(rep('x', len), 1), n = qr.size, ap = qr.align, last = ap.length - 1;
+    let centres = 0;
+    ap.forEach((_, i) => ap.forEach((__, j) => {
+      if (!((i === 0 && j === 0) || (i === 0 && j === last) || (i === last && j === 0))) centres++;
+    }));
+    assert.ok(centres > 0);
+    const svg = toSVG(qr, { ...base, style: 'dots' });
+    assert.ok(!/NaN|undefined/.test(svg));
+    const evenodd = svg.split('fill-rule="evenodd" d="')[1].split('"')[0];
+    // three sub-paths per ring set: finders use 3 rings each, alignment patterns 3 each
+    assert.equal((evenodd.match(/M/g) || []).length, 9 + 3 * centres);
+    // no individual dot is drawn inside an alignment pattern any more
+    const dots = (svg.split('<path')[1].match(/a0\.5 0\.5 0 1 0/g) || []).length / 2;
+    const [cx, cy] = [ap[1], ap[0]];
+    let expected = 0;
+    const inA = (x, y) => ap.some((ay, j) => ap.some((ax, i) =>
+      !((i === 0 && j === 0) || (i === 0 && j === last) || (i === last && j === 0)) &&
+      Math.abs(x - ax) <= 2 && Math.abs(y - ay) <= 2));
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const inF = (x < 7 && y < 7) || (x >= n - 7 && y < 7) || (x < 7 && y >= n - 7);
+      if (qr.modules[y][x] && !inF && !inA(x, y)) expected++;
+    }
+    assert.equal(dots, expected, `dots for ${cx},${cy}`);
+  }
+});

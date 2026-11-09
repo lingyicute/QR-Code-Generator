@@ -8,7 +8,7 @@ A single-file, fully offline QR code generator. Open `index.html` in a browser â
 - Phone numbers are normalised (separators and full-width characters are stripped)
 - Error correction levels L / M / Q / H, versions 1â€“40
 - Numeric, alphanumeric and byte (UTF-8) encoding modes; the input is split into mixed-mode segments automatically to produce the smallest code
-- Styles: square, rounded and dots (dots touch each other so scanners can still read them)
+- Styles: square, rounded and dots (dots touch each other and the finder / alignment patterns stay solid, so scanners can still read them)
 - Custom size, quiet zone (default 4 modules, as recommended by ISO/IEC 18004) and colors, plus transparent background
 - Export as PNG or SVG, or copy the image to the clipboard
 - Material 3 inspired UI with light / dark / system appearance and selectable accent colors
