@@ -6,7 +6,7 @@ A single-file, fully offline QR code generator. Open `index.html` in a browser â
 
 - Content types: plain text / URL, Wi-Fi, e-mail, phone, SMS and vCard
 - Error correction levels L / M / Q / H, versions 1â€“40
-- Numeric, alphanumeric and byte (UTF-8) encoding modes, chosen automatically to produce the smallest code
+- Numeric, alphanumeric and byte (UTF-8) encoding modes; the input is split into mixed-mode segments automatically to produce the smallest code
 - Styles: square, rounded and dots
 - Custom size, quiet zone (default 4 modules, as recommended by ISO/IEC 18004) and colors, plus transparent background
 - Export as PNG or SVG, or copy the image to the clipboard
