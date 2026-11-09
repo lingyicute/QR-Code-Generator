@@ -654,6 +654,7 @@ const TYPES = {
   wifi: { name:'Wi-Fi', fields:[
     {id:'ssid', label:'网络名称 (SSID)', kind:'text'},
     {id:'pass', label:'密码', kind:'password'},
+    {id:'showpass', label:'显示密码', desc:'以明文显示输入的密码，便于核对', kind:'switch'},
     {id:'enc', label:'加密方式', kind:'select', options:[['WPA','WPA / WPA2 / WPA3'],['WEP','WEP'],['nopass','无密码']], def:'WPA'},
     {id:'hidden', label:'隐藏网络', desc:'网络不广播 SSID 时开启', kind:'switch'}
   ], build:v => {
@@ -725,15 +726,18 @@ function renderFields(){
       return `<div class="field"><select id="${id}" data-k="${f.id}">${f.options.map(o=>`<option value="${o[0]}" ${o[0]===val?'selected':''}>${o[1]}</option>`).join('')}</select><label for="${id}">${f.label}</label></div>`;
     if (f.kind === 'switch')
       return `<label class="switch-row"><span><span class="t">${f.label}</span><br><span class="d">${f.desc||''}</span></span><input type="checkbox" class="switch" id="${id}" data-k="${f.id}" ${val?'checked':''}></label>`;
-    return `<div class="field"><input type="${f.kind}" id="${id}" data-k="${f.id}" value="${esc}" placeholder=" " autocomplete="${f.kind==='password'?'new-password':'off'}" spellcheck="false"><label for="${id}">${f.label}</label></div>`;
+    return `<div class="field"><input type="${f.kind==='password' && vals.showpass ? 'text' : f.kind}" id="${id}" data-k="${f.id}" value="${esc}" placeholder=" " autocomplete="${f.kind==='password'?'new-password':'off'}" spellcheck="false"><label for="${id}">${f.label}</label></div>`;
   }).join('');
   // Wi-Fi: hide password field when no encryption
   syncWifi();
 }
 function syncWifi(){
   if (state.type !== 'wifi') return;
-  const p = $('f_pass');
-  if (p) p.closest('.field').style.display = state.values.wifi.enc === 'nopass' ? 'none' : '';
+  const none = state.values.wifi.enc === 'nopass';
+  ['f_pass','f_showpass'].forEach(id => {
+    const el = $(id), row = el && el.closest('.field,.switch-row');
+    if (row) row.style.display = none ? 'none' : '';
+  });
 }
 
 let current = null;   // { qr, svgOpts, svg }
@@ -868,6 +872,7 @@ $('fields').addEventListener('change', onField);
 function onField(e){
   const k = e.target.dataset.k; if (!k) return;
   state.values[state.type][k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  if (k === 'showpass'){ const p = $('f_pass'); if (p) p.type = e.target.checked ? 'text' : 'password'; }
   syncWifi(); schedule();
 }
 document.querySelectorAll('input[name=ecc],input[name=style],#transparent').forEach(el => el.addEventListener('change', schedule));
