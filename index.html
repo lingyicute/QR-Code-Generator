@@ -414,44 +414,76 @@ const QR = (() => {
     alnum: { id:0x2, cc:[9,11,13],  bits:n => 11*Math.floor(n/2) + 6*(n%2) },
     byte:  { id:0x4, cc:[8,16,16],  bits:n => 8*n }
   };
-  function pickMode(bytes){
-    if (!bytes.length) return 'byte';
-    let num = true, aln = true;
-    for (const b of bytes){
-      if (b < 48 || b > 57) num = false;
-      if (b > 127 || ALNUM.indexOf(String.fromCharCode(b)) < 0) aln = false;
-      if (!num && !aln) break;
+  const ORDER = ['byte','alnum','num'];
+  const ccClass = ver => ver <= 9 ? 0 : ver <= 26 ? 1 : 2;
+
+  // Split the input into segments so the total bit count is minimal for one
+  // character-count class. Costs are kept in 1/6 bit units (alnum 5.5, num 3.33 bits/char).
+  function segmentize(bytes, cls){
+    const n = bytes.length;
+    if (!n) return [{ mode:'byte', start:0, len:0 }];
+    const head = ORDER.map(m => (4 + MODES[m].cc[cls]) * 6), per = [48, 33, 20];
+    const from = [];
+    let prev = null;
+    for (let i = 0; i < n; i++){
+      const b = bytes[i];
+      const ok = [true, b <= 127 && ALNUM.indexOf(String.fromCharCode(b)) >= 0, b >= 48 && b <= 57];
+      const cur = [Infinity, Infinity, Infinity], fr = [-1, -1, -1];
+      for (let m = 0; m < 3; m++){
+        if (!ok[m]) continue;
+        if (!prev){ cur[m] = head[m] + per[m]; continue; }
+        for (let k = 0; k < 3; k++){
+          if (prev[k] === Infinity) continue;
+          const c = k === m ? prev[k] + per[m] : Math.ceil(prev[k]/6)*6 + head[m] + per[m];
+          if (c < cur[m]){ cur[m] = c; fr[m] = k; }
+        }
+      }
+      from.push(fr); prev = cur;
     }
-    return num ? 'num' : aln ? 'alnum' : 'byte';
+    let m = prev.indexOf(Math.min(...prev));
+    const modes = new Array(n);
+    for (let i = n - 1; i >= 0; i--){ modes[i] = m; m = from[i][m]; }
+    const segs = [];
+    for (let i = 0; i < n; i++){
+      const last = segs[segs.length - 1];
+      if (last && last.mode === ORDER[modes[i]]) last.len++;
+      else segs.push({ mode: ORDER[modes[i]], start: i, len: 1 });
+    }
+    return segs;
   }
 
   function encode(bytes, ecc){
-    // choose the most compact mode, then the smallest version
-    const modeName = pickMode(bytes), mode = MODES[modeName];
-    let ver, usedBits;
+    // pick the cheapest segmentation, then the smallest version that holds it
+    const cache = [];
+    let ver, segs, usedBits;
     for (ver = 1; ; ver++){
-      usedBits = 4 + mode.cc[ver <= 9 ? 0 : ver <= 26 ? 1 : 2] + mode.bits(bytes.length);
+      const cls = ccClass(ver);
+      segs = cache[cls] || (cache[cls] = segmentize(bytes, cls));
+      usedBits = segs.reduce((t, g) => t + 4 + MODES[g.mode].cc[cls] + MODES[g.mode].bits(g.len), 0);
       if (usedBits <= dataCodewords(ver,ecc)*8) break;
       if (ver === 40) throw new Error('TOO_LONG');
     }
     const capBits = dataCodewords(ver,ecc)*8;
     const bits = [];
     const push = (v,len) => { for (let i = len-1; i >= 0; i--) bits.push((v >>> i) & 1); };
-    push(mode.id,4);
-    push(bytes.length, mode.cc[ver <= 9 ? 0 : ver <= 26 ? 1 : 2]);
-    if (modeName === 'num'){
-      for (let i = 0; i < bytes.length; i += 3){
-        const c = bytes.slice(i, i+3);
-        push(+String.fromCharCode(...c), c.length*3 + 1);
+    for (const g of segs){
+      const mode = MODES[g.mode], seg = bytes.slice(g.start, g.start + g.len);
+      push(mode.id,4);
+      push(g.len, mode.cc[ccClass(ver)]);
+      if (g.mode === 'num'){
+        for (let i = 0; i < seg.length; i += 3){
+          const c = seg.slice(i, i+3);
+          push(+String.fromCharCode(...c), c.length*3 + 1);
+        }
+      } else if (g.mode === 'alnum'){
+        const v = i => ALNUM.indexOf(String.fromCharCode(seg[i]));
+        for (let i = 0; i < seg.length; i += 2){
+          if (i + 1 < seg.length) push(v(i)*45 + v(i+1), 11);
+          else push(v(i), 6);
+        }
+      } else {
+        for (const x of seg) push(x,8);
       }
-    } else if (modeName === 'alnum'){
-      const v = i => ALNUM.indexOf(String.fromCharCode(bytes[i]));
-      for (let i = 0; i < bytes.length; i += 2){
-        if (i + 1 < bytes.length) push(v(i)*45 + v(i+1), 11);
-        else push(v(i), 6);
-      }
-    } else {
-      for (const b of bytes) push(b,8);
     }
     push(0, Math.min(4, capBits - bits.length));
     push(0, (8 - bits.length % 8) % 8);
@@ -558,7 +590,7 @@ const QR = (() => {
       applyMask(mk);
     }
     applyMask(best); formatBits(best);
-    return { size, modules: m, version: ver, mask: best, mode: modeName, used: Math.ceil(usedBits/8), capacity: capBits/8 };
+    return { size, modules: m, version: ver, mask: best, mode: segs.length === 1 ? segs[0].mode : 'mixed', used: Math.ceil(usedBits/8), capacity: capBits/8 };
   }
   return { encode };
 })();
@@ -717,7 +749,7 @@ function showBanner(msg, warn){
 }
 function setButtons(on){ ['dlPng','dlSvg','copyImg'].forEach(i => $(i).disabled = !on); }
 
-const MODE_LABELS = { num:'数字', alnum:'字母数字', byte:'字节' };
+const MODE_LABELS = { num:'数字', alnum:'字母数字', byte:'字节', mixed:'混合' };
 function update(){
   const t = TYPES[state.type];
   const text = t.build(state.values[state.type]);
