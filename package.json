@@ -1,0 +1,14 @@
+{
+  "name": "qr-code-generator",
+  "version": "1.0.0",
+  "description": "A single-file, fully offline QR code generator",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "author": "lingyicute",
+  "repository": { "type": "git", "url": "git+https://github.com/lingyicute/QR-Code-Generator.git" },
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test",
+    "start": "python3 -m http.server 8000"
+  }
+}

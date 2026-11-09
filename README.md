@@ -27,7 +27,7 @@ python3 -m http.server 8000
 The encoder and content builders have dependency-free tests (Node.js 18+):
 
 ```sh
-node --test
+node --test   # or: npm test
 ```
 
 ## Notes
