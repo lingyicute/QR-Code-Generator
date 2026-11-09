@@ -4,10 +4,11 @@ A single-file, fully offline QR code generator. Open `index.html` in a browser â
 
 ## Features
 
-- Content types: plain text / URL, Wi-Fi, e-mail, phone, SMS and vCard
+- Content types: plain text / URL, Wi-Fi (with optional password reveal), e-mail (several recipients allowed), phone, SMS and vCard
+- Phone numbers are normalised (separators and full-width characters are stripped)
 - Error correction levels L / M / Q / H, versions 1â€“40
 - Numeric, alphanumeric and byte (UTF-8) encoding modes; the input is split into mixed-mode segments automatically to produce the smallest code
-- Styles: square, rounded and dots
+- Styles: square, rounded and dots (dots touch each other so scanners can still read them)
 - Custom size, quiet zone (default 4 modules, as recommended by ISO/IEC 18004) and colors, plus transparent background
 - Export as PNG or SVG, or copy the image to the clipboard
 - Material 3 inspired UI with light / dark / system appearance and selectable accent colors
@@ -19,6 +20,14 @@ Just open `index.html`, or serve the folder with any static file server:
 
 ```sh
 python3 -m http.server 8000
+```
+
+## Tests
+
+The encoder and content builders have dependency-free tests (Node.js 18+):
+
+```sh
+node --test
 ```
 
 ## Notes
