@@ -249,3 +249,11 @@ test('oversized input is rejected immediately', () => {
   assert.throws(() => QR.encode(big, 0), /TOO_LONG/);
   assert.ok(Date.now() - t0 < 500, 'must fail fast without segmenting');
 });
+
+test('case-sensitive fields opt out of mobile keyboard auto-correction', () => {
+  const raw = (type, id) => TYPES[type].fields.find(f => f.id === id).raw;
+  assert.equal(raw('text', 'text'), true);
+  assert.equal(raw('wifi', 'ssid'), true);
+  assert.equal(raw('wifi', 'pass'), true);
+  assert.ok(!raw('vcard', 'name'), 'names keep the keyboard default so they get capitalised');
+});
