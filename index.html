@@ -610,6 +610,8 @@ function toSVG(qr, o){
 /* =====================================================================
  *  Content types
  * ===================================================================== */
+// drop visual separators so scanners get a dialable number
+const cleanPhone = s => (s || '').replace(/[\s().-]/g, '');
 const escWifi = s => s.replace(/([\\;,:"])/g, '\\$1');
 const TYPES = {
   text: { name:'文本 / 网址', fields:[
@@ -639,11 +641,11 @@ const TYPES = {
   }},
   tel: { name:'电话', fields:[
     {id:'tel', label:'电话号码', kind:'tel'}
-  ], build:v => { const n = (v.tel||'').replace(/\s+/g,''); return n ? 'tel:' + n : ''; } },
+  ], build:v => { const n = cleanPhone(v.tel); return n ? 'tel:' + n : ''; } },
   sms: { name:'短信', fields:[
     {id:'tel', label:'手机号码', kind:'tel'},
     {id:'msg', label:'短信内容', kind:'textarea', rows:3}
-  ], build:v => { const n = (v.tel||'').replace(/\s+/g,''); return n ? `SMSTO:${n}:${v.msg||''}` : ''; } },
+  ], build:v => { const n = cleanPhone(v.tel); return n ? `SMSTO:${n}:${v.msg||''}` : ''; } },
   vcard: { name:'名片', fields:[
     {id:'name', label:'姓名', kind:'text'},
     {id:'org', label:'公司 / 组织', kind:'text'},
