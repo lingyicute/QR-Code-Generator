@@ -899,9 +899,17 @@ document.addEventListener('pointerdown', e => {
 });
 
 /* ---------- Init ---------- */
+// browsers may restore form control values on reload; keep the read-outs in sync
+function syncLabels(){
+  $('outSize').textContent = $('size').value + ' px';
+  $('outMargin').textContent = $('margin').value + ' 格';
+  $('fgv').textContent = $('fg').value;
+  $('bgv').textContent = $('bg').value;
+}
 applyTheme();
 renderTypes();
 renderFields();
+syncLabels();
 document.querySelectorAll('input[type=range]').forEach(paintRange);
 update();
 </script>
