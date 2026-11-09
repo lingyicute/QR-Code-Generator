@@ -169,6 +169,12 @@ test('SVG output', () => {
   assert.match(sq, /shape-rendering="crispEdges"/);
   assert.ok(sq.includes('fill="#112233"'));
   assert.ok(!toSVG(qr, { ...base, style: 'square', transparent: true }).includes('<rect'));
+  // rounded modules: no hairline gaps, one closed sub-path per dark module outside the finders
+  const rounded = toSVG(qr, { ...base, style: 'rounded' });
+  assert.ok(!/NaN|undefined/.test(rounded));
+  const finderless = qr.modules.flat().filter(Boolean).length -
+    [[0, 0], [n - 7, 0], [0, n - 7]].reduce((t, [ox, oy]) => t + qr.modules.slice(oy, oy + 7).reduce((c, r) => c + r.slice(ox, ox + 7).filter(Boolean).length, 0), 0);
+  assert.equal((rounded.split('<path')[1].match(/z/g) || []).length, finderless);
   for (const style of ['rounded', 'dots']) {
     const s = toSVG(qr, { ...base, style });
     assert.ok(s.includes('fill-rule="evenodd"'), 'finder patterns are drawn separately');

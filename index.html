@@ -602,6 +602,15 @@ function rr(x,y,w,h,r){
   return `M${f(x+r)} ${f(y)}h${a}a${r} ${r} 0 0 1 ${r} ${r}v${b}a${r} ${r} 0 0 1 ${-r} ${r}h${-a}a${r} ${r} 0 0 1 ${-r} ${-r}v${-b}a${r} ${r} 0 0 1 ${r} ${-r}z`;
 }
 const fmt = v => +v.toFixed(3);
+// One module with individually rounded corners (corners that touch a dark neighbour stay square,
+// so adjacent modules fuse into a single shape without hairline seams between them)
+function rm(X,Y,tl,tr,br,bl,r){
+  return `M${fmt(X+(tl?r:0))} ${Y}` +
+    (tr ? `H${fmt(X+1-r)}a${r} ${r} 0 0 1 ${r} ${r}` : `H${X+1}`) +
+    (br ? `V${fmt(Y+1-r)}a${r} ${r} 0 0 1 ${-r} ${r}` : `V${Y+1}`) +
+    (bl ? `H${fmt(X+r)}a${r} ${r} 0 0 1 ${-r} ${-r}` : `H${X}`) +
+    (tl ? `V${fmt(Y+r)}a${r} ${r} 0 0 1 ${r} ${-r}` : `V${Y}`) + 'z';
+}
 function toSVG(qr, o){
   const n = qr.size, dim = n + o.margin*2;
   const px = o.px;
@@ -609,7 +618,7 @@ function toSVG(qr, o){
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dim} ${dim}" width="${px}" height="${px}"${o.style==='square'?' shape-rendering="crispEdges"':''}>`;
   if (!o.transparent) s += `<rect width="${dim}" height="${dim}" fill="${o.bg}"/>`;
   let d = '';
-  const R = 0.3, C = 0.5; // dots touch their neighbours: a gap between them breaks up the dark runs scanners rely on
+  const R = 0.35, C = 0.5; // dots touch their neighbours: a gap between them breaks up the dark runs scanners rely on
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++){
     if (!qr.modules[y][x]) continue;
     if (o.style !== 'square' && inF(x,y)) continue;
@@ -621,7 +630,11 @@ function toSVG(qr, o){
       d += `M${X} ${Y}h${len}v1h-${len}z`;
       x += len - 1;
     }
-    else if (o.style === 'rounded') d += rr(X+0.02,Y+0.02,0.96,0.96,R);
+    else if (o.style === 'rounded'){
+      const dk = (a,b) => a >= 0 && b >= 0 && a < n && b < n && qr.modules[b][a] && !inF(a,b);
+      const u = dk(x,y-1), dn = dk(x,y+1), l = dk(x-1,y), r = dk(x+1,y);
+      d += rm(X,Y,!u&&!l,!u&&!r,!dn&&!r,!dn&&!l,R);
+    }
     else d += `M${fmt(X+0.5-C)} ${Y+0.5}a${C} ${C} 0 1 0 ${2*C} 0a${C} ${C} 0 1 0 ${-2*C} 0z`;
   }
   s += `<path fill="${o.fg}" d="${d}"/>`;
