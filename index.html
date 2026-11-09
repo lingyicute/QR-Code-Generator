@@ -921,7 +921,8 @@ $('btnMode').onclick = () => {
   save(); applyTheme(); snack('外观：' + MODE_NAMES[prefs.mode]);
 };
 function save(){ try { localStorage.setItem('qr-theme', JSON.stringify(prefs)); } catch(e){} }
-mq.addEventListener && mq.addEventListener('change', applyTheme);
+if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+else if (mq.addListener) mq.addListener(applyTheme); // Safari < 14
 
 /* ---------- Ripple ---------- */
 document.addEventListener('pointerdown', e => {
