@@ -967,6 +967,13 @@ renderFields();
 syncLabels();
 document.querySelectorAll('input[type=range]').forEach(paintRange);
 update();
+// form controls may be restored after the first run (bfcache, Firefox form restore)
+window.addEventListener('pageshow', e => {
+  if (!e.persisted) return;
+  syncLabels();
+  document.querySelectorAll('input[type=range]').forEach(paintRange);
+  schedule();
+});
 </script>
 </body>
 </html>
