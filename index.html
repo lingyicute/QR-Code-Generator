@@ -381,10 +381,11 @@ const QR = (() => {
           if (b < size && get(a,b) === get(a,b-1)) run++;
           else { if (run >= 5) r += run - 2; run = 1; }
         }
-        for (let b = 0; b <= size - 11; b++){
+        // the quiet zone counts as light, so patterns touching the symbol edge are penalised too
+        for (let b = -4; b <= size - 7; b++){
           let m1 = true, m2 = true;
           for (let k = 0; k < 11 && (m1 || m2); k++){
-            const v = get(a,b+k) ? 1 : 0;
+            const x = b + k, v = x >= 0 && x < size && get(a,x) ? 1 : 0;
             if (v !== P1[k]) m1 = false;
             if (v !== P2[k]) m2 = false;
           }
