@@ -758,7 +758,7 @@ function renderFields(){
       return `<div class="field"><select id="${id}" data-k="${f.id}">${f.options.map(o=>`<option value="${o[0]}" ${o[0]===val?'selected':''}>${o[1]}</option>`).join('')}</select><label for="${id}">${f.label}</label></div>`;
     if (f.kind === 'switch')
       return `<label class="switch-row"><span><span class="t">${f.label}</span><br><span class="d">${f.desc||''}</span></span><input type="checkbox" class="switch" role="switch" id="${id}" data-k="${f.id}" ${val?'checked':''}></label>`;
-    return `<div class="field"><input type="${f.kind==='password' && vals.showpass ? 'text' : f.kind}" id="${id}" data-k="${f.id}" value="${esc}" placeholder=" " autocomplete="${f.kind==='password'?'new-password':'off'}" spellcheck="false"${raw}><label for="${id}">${f.label}</label></div>`;
+    return `<div class="field"><input type="${f.kind==='password' && vals.showpass ? 'text' : f.kind}" id="${id}" data-k="${f.id}" value="${esc}" placeholder=" " autocomplete="${f.kind==='password'?'new-password':'off'}"${raw || ' spellcheck="false"'}><label for="${id}">${f.label}</label></div>`;
   }).join('');
   // Wi-Fi: hide password field when no encryption
   syncWifi();
