@@ -780,6 +780,15 @@ function showBanner(msg, warn){
 }
 function setButtons(on){ ['dlPng','dlSvg','copyImg'].forEach(i => $(i).disabled = !on); }
 
+// Blob URLs avoid pushing a multi-megabyte percent-encoded data URI into the DOM on every keystroke
+const BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+let previewUrl = '';
+function setPreview(svg){
+  const old = previewUrl;
+  previewUrl = svg ? URL.createObjectURL(new Blob([svg], { type:'image/svg+xml' })) : '';
+  $('qrImg').src = previewUrl || BLANK_IMG;
+  if (old) URL.revokeObjectURL(old);
+}
 const MODE_LABELS = { num:'数字', alnum:'字母数字', byte:'字节', mixed:'混合' };
 function update(){
   const t = TYPES[state.type];
@@ -792,7 +801,7 @@ function update(){
   const reqPx = +$('size').value;
 
   if (!text){
-    current = null;
+    current = null; setPreview('');
     $('qrBox').classList.add('is-empty');
     $('emptyTxt').textContent = '在左侧输入内容，二维码将实时生成';
     $('stats').innerHTML = ''; $('sizeNote').textContent = '';
@@ -805,7 +814,7 @@ function update(){
   }catch(e){
     const tooLong = e && e.message === 'TOO_LONG';
     if (!tooLong) console.error(e);
-    current = null;
+    current = null; setPreview('');
     $('qrBox').classList.add('is-empty');
     $('emptyTxt').textContent = tooLong ? '内容过长，无法生成' : '生成失败';
     $('stats').innerHTML = ''; $('sizeNote').textContent = '';
@@ -818,7 +827,7 @@ function update(){
   const o = { px, margin, fg, bg, style, transparent };
   const svg = toSVG(qr, o);
   current = { qr, o, svg };
-  $('qrImg').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  setPreview(svg);
   $('qrImg').alt = '二维码（' + t.name + '）';
   $('qrBox').classList.remove('is-empty');
   $('stats').innerHTML =
